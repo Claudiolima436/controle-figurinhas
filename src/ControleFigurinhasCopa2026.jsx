@@ -4,17 +4,18 @@ export default function ControleFigurinhasCopa2026() {
   const totalFigurinhas = 980;
 
   const obterSecaoDaFigurinha = (numero) => {
-    if (numero <= 20) return { nome: 'Taça e Símbolos', cor: 'bg-purple-600' };
-    if (numero <= 40) return { nome: 'Estádios', cor: 'bg-teal-500' };
-    if (numero <= 60) return { nome: 'Argentina', cor: 'bg-sky-400' };
-    if (numero <= 80) return { nome: 'Brasil', cor: 'bg-yellow-500' };
-    if (numero <= 100) return { nome: 'França', cor: 'bg-blue-700' };
-    if (numero <= 120) return { nome: 'Inglaterra', cor: 'bg-red-600' };
-    if (numero <= 140) return { nome: 'Espanha', cor: 'bg-red-500' };
-    if (numero <= 160) return { nome: 'Alemanha', cor: 'bg-gray-800' };
-    if (numero <= 180) return { nome: 'Portugal', cor: 'bg-red-700' };
+    if (numero <= 20) return { nome: 'Especiais', prefixo: 'FWC', inicio: 1, cor: 'bg-purple-600' };
+    if (numero <= 40) return { nome: 'Cidades Sede', prefixo: 'CID', inicio: 21, cor: 'bg-teal-500' };
+    if (numero <= 60) return { nome: 'Argentina', prefixo: 'ARG', inicio: 41, cor: 'bg-sky-400' };
+    if (numero <= 80) return { nome: 'Brasil', prefixo: 'BRA', inicio: 61, cor: 'bg-yellow-500' };
+    if (numero <= 100) return { nome: 'França', prefixo: 'FRA', inicio: 81, cor: 'bg-blue-700' };
+    if (numero <= 120) return { nome: 'Inglaterra', prefixo: 'ENG', inicio: 101, cor: 'bg-red-600' };
+    if (numero <= 140) return { nome: 'Espanha', prefixo: 'ESP', inicio: 121, cor: 'bg-red-500' };
+    if (numero <= 160) return { nome: 'Alemanha', prefixo: 'GER', inicio: 141, cor: 'bg-gray-800' };
+    if (numero <= 180) return { nome: 'Portugal', prefixo: 'POR', inicio: 161, cor: 'bg-red-700' };
     const equipe = Math.ceil((numero - 180) / 20);
-    return { nome: `Seleção ${equipe}`, cor: 'bg-indigo-500' };
+    const inicio = 181 + ((equipe - 1) * 20);
+    return { nome: `Seleção ${equipe}`, prefixo: `SL${equipe}`, inicio: inicio, cor: 'bg-indigo-500' };
   };
 
   const calcularProgresso = (colecao) => {
@@ -26,8 +27,11 @@ export default function ControleFigurinhasCopa2026() {
     return Array.from({ length: totalFigurinhas }, (_, i) => {
       const numero = i + 1;
       const secao = obterSecaoDaFigurinha(numero);
+      const numeroNaSecao = numero - secao.inicio + 1;
+      const codigoBusca = `${secao.prefixo} ${numeroNaSecao}`;
       return {
         numero,
+        codigoBusca,
         possui: false,
         repetida: false,
         secaoNome: secao.nome,
@@ -45,7 +49,9 @@ export default function ControleFigurinhasCopa2026() {
       const parsed = JSON.parse(dadosSalvos);
       const colecaoAtualizada = parsed.map((item) => {
         const secao = obterSecaoDaFigurinha(item.numero);
-        return { ...item, secaoNome: secao.nome, secaoCor: secao.cor };
+        const numeroNaSecao = item.numero - secao.inicio + 1;
+        const codigoBusca = `${secao.prefixo} ${numeroNaSecao}`;
+        return { ...item, secaoNome: secao.nome, secaoCor: secao.cor, codigoBusca };
       });
       setColecao(colecaoAtualizada);
     }
@@ -76,8 +82,9 @@ export default function ControleFigurinhasCopa2026() {
   const progresso = calcularProgresso(colecao);
 
   const listaFiltrada = colecao.filter((item) =>
-    item.numero.toString().includes(busca) || 
-    item.secaoNome.toLowerCase().includes(busca.toLowerCase())
+    item.codigoBusca.toLowerCase().includes(busca.toLowerCase()) || 
+    item.secaoNome.toLowerCase().includes(busca.toLowerCase()) ||
+    item.numero.toString() === busca
   );
 
   return (
@@ -114,7 +121,7 @@ export default function ControleFigurinhasCopa2026() {
         <div className="bg-white rounded-3xl shadow-xl p-4 mb-6">
           <input
             type="text"
-            placeholder="Buscar por número ou seleção..."
+            placeholder="Buscar por código (ex: FWC 1, BRA 5) ou seleção..."
             className="w-full border-2 border-gray-200 rounded-2xl p-4 text-lg focus:outline-none focus:border-blue-500 transition-colors"
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
@@ -136,7 +143,7 @@ export default function ControleFigurinhasCopa2026() {
               <div className="p-4">
                 <div className="flex justify-center items-center mb-4">
                   <span className={`text-2xl font-black ${item.possui ? 'text-green-600' : 'text-gray-700'}`}>
-                    #{item.numero}
+                    {item.codigoBusca}
                   </span>
                 </div>
 

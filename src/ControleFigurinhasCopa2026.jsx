@@ -4,18 +4,59 @@ export default function ControleFigurinhasCopa2026() {
   const totalFigurinhas = 980;
 
   const obterSecaoDaFigurinha = (numero) => {
-    if (numero <= 20) return { nome: 'Especiais', prefixo: 'FWC', inicio: 1, cor: 'bg-purple-600' };
-    if (numero <= 40) return { nome: 'Cidades Sede', prefixo: 'CID', inicio: 21, cor: 'bg-teal-500' };
-    if (numero <= 60) return { nome: 'Argentina', prefixo: 'ARG', inicio: 41, cor: 'bg-sky-400' };
-    if (numero <= 80) return { nome: 'Brasil', prefixo: 'BRA', inicio: 61, cor: 'bg-yellow-500' };
-    if (numero <= 100) return { nome: 'França', prefixo: 'FRA', inicio: 81, cor: 'bg-blue-700' };
-    if (numero <= 120) return { nome: 'Inglaterra', prefixo: 'ENG', inicio: 101, cor: 'bg-red-600' };
-    if (numero <= 140) return { nome: 'Espanha', prefixo: 'ESP', inicio: 121, cor: 'bg-red-500' };
-    if (numero <= 160) return { nome: 'Alemanha', prefixo: 'GER', inicio: 141, cor: 'bg-gray-800' };
-    if (numero <= 180) return { nome: 'Portugal', prefixo: 'POR', inicio: 161, cor: 'bg-red-700' };
-    const equipe = Math.ceil((numero - 180) / 20);
-    const inicio = 181 + ((equipe - 1) * 20);
-    return { nome: `Seleção ${equipe}`, prefixo: `SL${equipe}`, inicio: inicio, cor: 'bg-indigo-500' };
+    const secoesOficiais = [
+      { nome: 'Especiais', prefixo: 'FWC', inicio: 1, fim: 20, cor: 'bg-purple-600' },
+      { nome: 'Canadá', prefixo: 'CAN', inicio: 21, fim: 40, cor: 'bg-red-500' },
+      { nome: 'México', prefixo: 'MEX', inicio: 41, fim: 60, cor: 'bg-green-600' },
+      { nome: 'Estados Unidos', prefixo: 'USA', inicio: 61, fim: 80, cor: 'bg-blue-600' },
+      { nome: 'Argentina', prefixo: 'ARG', inicio: 81, fim: 100, cor: 'bg-sky-400' },
+      { nome: 'Brasil', prefixo: 'BRA', inicio: 101, fim: 120, cor: 'bg-yellow-500' },
+      { nome: 'Equador', prefixo: 'ECU', inicio: 121, fim: 140, cor: 'bg-yellow-400' },
+      { nome: 'Uruguai', prefixo: 'URU', inicio: 141, fim: 160, cor: 'bg-sky-300' },
+      { nome: 'Colômbia', prefixo: 'COL', inicio: 161, fim: 180, cor: 'bg-yellow-600' },
+      { nome: 'Chile', prefixo: 'CHI', inicio: 181, fim: 200, cor: 'bg-red-600' },
+      { nome: 'Peru', prefixo: 'PER', inicio: 201, fim: 220, cor: 'bg-red-500' },
+      { nome: 'Venezuela', prefixo: 'VEN', inicio: 221, fim: 240, cor: 'bg-red-800' },
+      { nome: 'Paraguai', prefixo: 'PAR', inicio: 241, fim: 260, cor: 'bg-red-700' },
+      { nome: 'Bolívia', prefixo: 'BOL', inicio: 261, fim: 280, cor: 'bg-green-500' },
+      { nome: 'França', prefixo: 'FRA', inicio: 281, fim: 300, cor: 'bg-blue-700' },
+      { nome: 'Inglaterra', prefixo: 'ENG', inicio: 301, fim: 320, cor: 'bg-gray-400' },
+      { nome: 'Espanha', prefixo: 'ESP', inicio: 321, fim: 340, cor: 'bg-red-600' },
+      { nome: 'Alemanha', prefixo: 'GER', inicio: 341, fim: 360, cor: 'bg-gray-800' },
+      { nome: 'Portugal', prefixo: 'POR', inicio: 361, fim: 380, cor: 'bg-red-700' },
+      { nome: 'Itália', prefixo: 'ITA', inicio: 381, fim: 400, cor: 'bg-blue-600' },
+      { nome: 'Holanda', prefixo: 'NED', inicio: 401, fim: 420, cor: 'bg-orange-500' },
+      { nome: 'Bélgica', prefixo: 'BEL', inicio: 421, fim: 440, cor: 'bg-red-500' },
+      { nome: 'Croácia', prefixo: 'CRO', inicio: 441, fim: 460, cor: 'bg-red-500' },
+      { nome: 'Suíça', prefixo: 'SUI', inicio: 461, fim: 480, cor: 'bg-red-600' },
+      { nome: 'Dinamarca', prefixo: 'DEN', inicio: 481, fim: 500, cor: 'bg-red-600' },
+      { nome: 'Suécia', prefixo: 'SWE', inicio: 501, fim: 520, cor: 'bg-yellow-400' },
+      { nome: 'Sérvia', prefixo: 'SRB', inicio: 521, fim: 540, cor: 'bg-red-600' },
+      { nome: 'Polônia', prefixo: 'POL', inicio: 541, fim: 560, cor: 'bg-gray-400' },
+      { nome: 'Marrocos', prefixo: 'MAR', inicio: 561, fim: 580, cor: 'bg-red-600' },
+      { nome: 'Senegal', prefixo: 'SEN', inicio: 581, fim: 600, cor: 'bg-green-600' },
+      { nome: 'Argélia', prefixo: 'ALG', inicio: 601, fim: 620, cor: 'bg-green-500' },
+      { nome: 'Nigéria', prefixo: 'NGA', inicio: 621, fim: 640, cor: 'bg-green-600' },
+      { nome: 'Camarões', prefixo: 'CMR', inicio: 641, fim: 660, cor: 'bg-green-700' },
+      { nome: 'Costa do Marfim', prefixo: 'CIV', inicio: 661, fim: 680, cor: 'bg-orange-500' },
+      { nome: 'Egito', prefixo: 'EGY', inicio: 681, fim: 700, cor: 'bg-red-600' },
+      { nome: 'Gana', prefixo: 'GHA', inicio: 701, fim: 720, cor: 'bg-yellow-500' },
+      { nome: 'Mali', prefixo: 'MLI', inicio: 721, fim: 740, cor: 'bg-yellow-400' },
+      { nome: 'Japão', prefixo: 'JPN', inicio: 741, fim: 760, cor: 'bg-blue-600' },
+      { nome: 'Coreia do Sul', prefixo: 'KOR', inicio: 761, fim: 780, cor: 'bg-red-500' },
+      { nome: 'Arábia Saudita', prefixo: 'KSA', inicio: 781, fim: 800, cor: 'bg-green-600' },
+      { nome: 'Irã', prefixo: 'IRN', inicio: 801, fim: 820, cor: 'bg-gray-400' },
+      { nome: 'Austrália', prefixo: 'AUS', inicio: 821, fim: 840, cor: 'bg-yellow-400' },
+      { nome: 'Catar', prefixo: 'QAT', inicio: 841, fim: 860, cor: 'bg-red-800' },
+      { nome: 'Iraque', prefixo: 'IRQ', inicio: 861, fim: 880, cor: 'bg-green-600' },
+      { nome: 'Emirados Árabes', prefixo: 'UAE', inicio: 881, fim: 900, cor: 'bg-gray-400' },
+      { nome: 'Costa Rica', prefixo: 'CRC', inicio: 901, fim: 920, cor: 'bg-red-600' },
+      { nome: 'Panamá', prefixo: 'PAN', inicio: 921, fim: 940, cor: 'bg-red-500' },
+      { nome: 'Jamaica', prefixo: 'JAM', inicio: 941, fim: 960, cor: 'bg-yellow-400' },
+      { nome: 'Nova Zelândia', prefixo: 'NZL', inicio: 961, fim: 980, cor: 'bg-gray-400' }
+    ];
+    
+    return secoesOficiais.find(secao => numero >= secao.inicio && numero <= secao.fim) || secoesOficiais[0];
   };
 
   const calcularProgresso = (colecao) => {
@@ -121,7 +162,7 @@ export default function ControleFigurinhasCopa2026() {
         <div className="bg-white rounded-3xl shadow-xl p-4 mb-6">
           <input
             type="text"
-            placeholder="Buscar por código (ex: FWC 1, BRA 5) ou seleção..."
+            placeholder="Buscar por código (ex: ECU 16, BRA 5) ou seleção..."
             className="w-full border-2 border-gray-200 rounded-2xl p-4 text-lg focus:outline-none focus:border-blue-500 transition-colors"
             value={busca}
             onChange={(e) => setBusca(e.target.value)}

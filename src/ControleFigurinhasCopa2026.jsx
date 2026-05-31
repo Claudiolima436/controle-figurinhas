@@ -3,6 +3,12 @@ import React from 'react';
 export default function ControleFigurinhasCopa2026() {
   const totalFigurinhas = 980;
 
+  const nomesConhecidos = {
+    "ECU 16": "Gonzalo Plata",
+    // Você pode ir adicionando os próximos jogadores aqui, seguindo este mesmo formato:
+    // "BRA 10": "Nome do Jogador",
+  };
+
   const obterSecaoDaFigurinha = (numero) => {
     const secoesOficiais = [
       { nome: 'Especiais', prefixo: 'FWC', inicio: 1, fim: 20, cor: 'bg-purple-600' },
@@ -70,9 +76,11 @@ export default function ControleFigurinhasCopa2026() {
       const secao = obterSecaoDaFigurinha(numero);
       const numeroNaSecao = numero - secao.inicio + 1;
       const codigoBusca = `${secao.prefixo} ${numeroNaSecao}`;
+      const nomeJogador = nomesConhecidos[codigoBusca] || '';
       return {
         numero,
         codigoBusca,
+        nomeJogador,
         possui: false,
         quantidadeRepetidas: 0,
         secaoNome: secao.nome,
@@ -93,13 +101,14 @@ export default function ControleFigurinhasCopa2026() {
         const secao = obterSecaoDaFigurinha(item.numero);
         const numeroNaSecao = item.numero - secao.inicio + 1;
         const codigoBusca = `${secao.prefixo} ${numeroNaSecao}`;
+        const nomeJogador = nomesConhecidos[codigoBusca] || '';
         
         let qtd = item.quantidadeRepetidas || 0;
         if (qtd === 0 && item.repetida) {
           qtd = 1;
         }
         
-        return { ...item, secaoNome: secao.nome, secaoCor: secao.cor, codigoBusca, quantidadeRepetidas: qtd };
+        return { ...item, secaoNome: secao.nome, secaoCor: secao.cor, codigoBusca, nomeJogador, quantidadeRepetidas: qtd };
       });
       setColecao(colecaoAtualizada);
     }
@@ -143,7 +152,8 @@ export default function ControleFigurinhasCopa2026() {
   let listaFiltrada = colecao.filter((item) =>
     item.codigoBusca.toLowerCase().includes(busca.toLowerCase()) || 
     item.secaoNome.toLowerCase().includes(busca.toLowerCase()) ||
-    item.numero.toString() === busca
+    item.numero.toString() === busca ||
+    (item.nomeJogador && item.nomeJogador.toLowerCase().includes(busca.toLowerCase()))
   );
 
   if (filtroAtivo === 'faltantes') {
@@ -186,7 +196,7 @@ export default function ControleFigurinhasCopa2026() {
         <div className="bg-white rounded-3xl shadow-xl p-4 mb-6">
           <input
             type="text"
-            placeholder="Buscar por código (ex: ECU 16, BRA 5) ou seleção..."
+            placeholder="Buscar por nome, código (ex: ECU 16) ou seleção..."
             className="w-full border-2 border-gray-200 rounded-2xl p-4 text-lg focus:outline-none focus:border-blue-500 transition-colors"
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
@@ -227,10 +237,15 @@ export default function ControleFigurinhasCopa2026() {
               </div>
               
               <div className="p-4 flex-1 flex flex-col justify-between">
-                <div className="flex justify-center items-center mb-4">
+                <div className="flex flex-col justify-center items-center mb-4 min-h-[60px]">
                   <span className={`text-2xl font-black ${item.possui ? 'text-green-600' : 'text-gray-700'}`}>
                     {item.codigoBusca}
                   </span>
+                  {item.nomeJogador && (
+                    <span className="text-sm font-bold text-gray-500 mt-1 text-center leading-tight">
+                      {item.nomeJogador}
+                    </span>
+                  )}
                 </div>
 
                 <div className="flex flex-col gap-3">

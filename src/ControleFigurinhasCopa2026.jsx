@@ -74,7 +74,7 @@ export default function ControleFigurinhasCopa2026() {
         numero,
         codigoBusca,
         possui: false,
-        repetida: false,
+        quantidadeRepetidas: 0,
         secaoNome: secao.nome,
         secaoCor: secao.cor
       };
@@ -92,7 +92,15 @@ export default function ControleFigurinhasCopa2026() {
         const secao = obterSecaoDaFigurinha(item.numero);
         const numeroNaSecao = item.numero - secao.inicio + 1;
         const codigoBusca = `${secao.prefixo} ${numeroNaSecao}`;
-        return { ...item, secaoNome: secao.nome, secaoCor: secao.cor, codigoBusca };
+        
+        let qtd = 0;
+        if (item.quantidadeRepetidas !== undefined) {
+          qtd = item.quantidadeRepetidas;
+        } else if (item.repetida) {
+          qtd = 1;
+        }
+        
+        return { ...item, secaoNome: secao.nome, secaoCor: secao.cor, codigoBusca, quantidadeRepetidas: qtd };
       });
       setColecao(colecaoAtualizada);
     }
@@ -110,16 +118,27 @@ export default function ControleFigurinhasCopa2026() {
     );
   };
 
-  const alternarRepetida = (numero) => {
+  const adicionarRepetida = (numero) => {
     setColecao((prev) =>
       prev.map((item) =>
-        item.numero === numero ? { ...item, repetida: !item.repetida } : item
+        item.numero === numero ? { ...item, quantidadeRepetidas: (item.quantidadeRepetidas || 0) + 1 } : item
       )
     );
   };
 
+  const removerRepetida = (numero) => {
+    setColecao((prev) =>
+      prev.map((item) => {
+        if (item.numero === numero && (item.quantidadeRepetidas || 0) > 0) {
+          return { ...item, quantidadeRepetidas: item.quantidadeRepetidas - 1 };
+        }
+        return item;
+      })
+    );
+  };
+
   const faltantes = colecao.filter((item) => !item.possui).length;
-  const repetidas = colecao.filter((item) => item.repetida).length;
+  const repetidas = colecao.reduce((acc, item) => acc + (item.quantidadeRepetidas || 0), 0);
   const progresso = calcularProgresso(colecao);
 
   const listaFiltrada = colecao.filter((item) =>
@@ -173,7 +192,7 @@ export default function ControleFigurinhasCopa2026() {
           {listaFiltrada.map((item) => (
             <div
               key={item.numero}
-              className={`rounded-2xl overflow-hidden shadow-lg transition-transform transform hover:scale-105 bg-white border-2 ${
+              className={`rounded-2xl overflow-hidden shadow-lg transition-transform transform hover:scale-105 bg-white border-2 flex flex-col ${
                 item.possui ? 'border-green-500' : 'border-transparent'
               }`}
             >
@@ -181,14 +200,14 @@ export default function ControleFigurinhasCopa2026() {
                 {item.secaoNome}
               </div>
               
-              <div className="p-4">
+              <div className="p-4 flex-1 flex flex-col justify-between">
                 <div className="flex justify-center items-center mb-4">
                   <span className={`text-2xl font-black ${item.possui ? 'text-green-600' : 'text-gray-700'}`}>
                     {item.codigoBusca}
                   </span>
                 </div>
 
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-3">
                   <button
                     onClick={() => alternarPossui(item.numero)}
                     className={`rounded-xl p-2 text-white font-bold transition-colors ${
@@ -198,14 +217,23 @@ export default function ControleFigurinhasCopa2026() {
                     {item.possui ? '✓ Tenho' : 'Marcar'}
                   </button>
 
-                  <button
-                    onClick={() => alternarRepetida(item.numero)}
-                    className={`rounded-xl p-2 font-bold transition-colors ${
-                      item.repetida ? 'bg-yellow-400 text-yellow-900 hover:bg-yellow-500' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                    }`}
-                  >
-                    {item.repetida ? '+ Repetida' : 'Normal'}
-                  </button>
+                  <div className="flex items-center justify-between bg-gray-100 rounded-xl p-1 border border-gray-200">
+                    <button 
+                      onClick={() => removerRepetida(item.numero)}
+                      className="w-8 h-8 flex items-center justify-center bg-white rounded-lg font-bold text-gray-600 shadow hover:bg-gray-50 transition-colors"
+                    >
+                      -
+                    </button>
+                    <span className={`font-bold text-sm ${item.quantidadeRepetidas > 0 ? 'text-yellow-600' : 'text-gray-400'}`}>
+                      {item.quantidadeRepetidas || 0} Rep.
+                    </span>
+                    <button 
+                      onClick={() => adicionarRepetida(item.numero)}
+                      className="w-8 h-8 flex items-center justify-center bg-yellow-400 rounded-lg font-bold text-yellow-900 shadow hover:bg-yellow-500 transition-colors"
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

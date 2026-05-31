@@ -5,8 +5,12 @@ export default function ControleFigurinhasCopa2026() {
 
   const nomesConhecidos = {
     "ECU 16": "Gonzalo Plata",
-    // Você pode ir adicionando os próximos jogadores aqui, seguindo este mesmo formato:
-    // "BRA 10": "Nome do Jogador",
+    "BRA 7": "Vinícius Júnior",
+    "BRA 10": "Rodrygo",
+    "URU 10": "Giorgian de Arrascaeta",
+    "ARG 10": "Lionel Messi",
+    // Você deve ir adicionando os próximos jogadores aqui, seguindo este exato modelo:
+    // "SIGLA NUMERO": "Nome do Jogador",
   };
 
   const obterSecaoDaFigurinha = (numero) => {
@@ -145,6 +149,27 @@ export default function ControleFigurinhasCopa2026() {
     );
   };
 
+  const copiarParaWhatsApp = () => {
+    const repetidasFiltradas = colecao.filter(item => (item.quantidadeRepetidas || 0) > 0);
+    if (repetidasFiltradas.length === 0) {
+      alert("Você ainda não tem figurinhas repetidas marcadas para trocar!");
+      return;
+    }
+
+    let texto = "🔥 *Minhas Figurinhas Repetidas - Copa 2026* 🔥\n\n";
+    repetidasFiltradas.forEach(item => {
+      texto += `⚽ ${item.codigoBusca}`;
+      if (item.nomeJogador) texto += ` (${item.nomeJogador})`;
+      if (item.quantidadeRepetidas > 1) texto += ` - ${item.quantidadeRepetidas}x`;
+      texto += "\n";
+    });
+    texto += "\nQuem tiver interesse, me chama!";
+
+    navigator.clipboard.writeText(texto)
+      .then(() => alert("Lista copiada com sucesso! Agora é só colar no seu WhatsApp."))
+      .catch(() => alert("Erro ao copiar a lista. Tente novamente."));
+  };
+
   const faltantes = colecao.filter((item) => !item.possui).length;
   const repetidas = colecao.reduce((acc, item) => acc + (item.quantidadeRepetidas || 0), 0);
   const progresso = calcularProgresso(colecao);
@@ -202,7 +227,7 @@ export default function ControleFigurinhasCopa2026() {
             onChange={(e) => setBusca(e.target.value)}
           />
           
-          <div className="flex gap-2 mt-4 overflow-x-auto pb-2">
+          <div className="flex flex-wrap gap-2 mt-4 pb-2">
             <button
               onClick={() => setFiltroAtivo('todas')}
               className={`flex-1 min-w-[100px] py-3 px-4 rounded-xl font-bold transition-colors ${filtroAtivo === 'todas' ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
@@ -222,6 +247,16 @@ export default function ControleFigurinhasCopa2026() {
               Repetidas
             </button>
           </div>
+          
+          <button
+            onClick={copiarParaWhatsApp}
+            className="w-full mt-2 py-3 px-4 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold shadow-md transition-colors flex items-center justify-center gap-2"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+            Copiar Lista de Repetidas para WhatsApp
+          </button>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">

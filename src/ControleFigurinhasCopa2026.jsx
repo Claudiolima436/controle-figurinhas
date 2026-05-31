@@ -94,10 +94,8 @@ export default function ControleFigurinhasCopa2026() {
         const numeroNaSecao = item.numero - secao.inicio + 1;
         const codigoBusca = `${secao.prefixo} ${numeroNaSecao}`;
         
-        let qtd = 0;
-        if (item.quantidadeRepetidas !== undefined) {
-          qtd = item.quantidadeRepetidas;
-        } else if (item.repetida) {
+        let qtd = item.quantidadeRepetidas || 0;
+        if (qtd === 0 && item.repetida) {
           qtd = 1;
         }
         

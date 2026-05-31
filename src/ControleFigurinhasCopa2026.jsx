@@ -83,6 +83,7 @@ export default function ControleFigurinhasCopa2026() {
 
   const [colecao, setColecao] = React.useState(gerarListaInicial);
   const [busca, setBusca] = React.useState('');
+  const [filtroAtivo, setFiltroAtivo] = React.useState('todas'); 
 
   React.useEffect(() => {
     const dadosSalvos = localStorage.getItem('album2026');
@@ -141,11 +142,17 @@ export default function ControleFigurinhasCopa2026() {
   const repetidas = colecao.reduce((acc, item) => acc + (item.quantidadeRepetidas || 0), 0);
   const progresso = calcularProgresso(colecao);
 
-  const listaFiltrada = colecao.filter((item) =>
+  let listaFiltrada = colecao.filter((item) =>
     item.codigoBusca.toLowerCase().includes(busca.toLowerCase()) || 
     item.secaoNome.toLowerCase().includes(busca.toLowerCase()) ||
     item.numero.toString() === busca
   );
+
+  if (filtroAtivo === 'faltantes') {
+    listaFiltrada = listaFiltrada.filter(item => !item.possui);
+  } else if (filtroAtivo === 'repetidas') {
+    listaFiltrada = listaFiltrada.filter(item => (item.quantidadeRepetidas || 0) > 0);
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 to-green-100 p-4">
@@ -186,6 +193,27 @@ export default function ControleFigurinhasCopa2026() {
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
           />
+          
+          <div className="flex gap-2 mt-4 overflow-x-auto pb-2">
+            <button
+              onClick={() => setFiltroAtivo('todas')}
+              className={`flex-1 min-w-[100px] py-3 px-4 rounded-xl font-bold transition-colors ${filtroAtivo === 'todas' ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+            >
+              Todas
+            </button>
+            <button
+              onClick={() => setFiltroAtivo('faltantes')}
+              className={`flex-1 min-w-[100px] py-3 px-4 rounded-xl font-bold transition-colors ${filtroAtivo === 'faltantes' ? 'bg-red-500 text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+            >
+              Faltantes
+            </button>
+            <button
+              onClick={() => setFiltroAtivo('repetidas')}
+              className={`flex-1 min-w-[100px] py-3 px-4 rounded-xl font-bold transition-colors ${filtroAtivo === 'repetidas' ? 'bg-yellow-500 text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+            >
+              Repetidas
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">

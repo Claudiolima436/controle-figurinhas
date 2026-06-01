@@ -1,6 +1,16 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { auth } from './firebase';
+import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
 
 export default function ControleFigurinhasCopa2026() {
+  // --- ESTADOS DE AUTENTICAÇÃO ---
+  const [usuario, setUsuario] = useState(null);
+  const [email, setEmail] = useState('');
+  const [senha, setSenha] = useState('');
+  const [erroLogin, setErroLogin] = useState('');
+  const [verificandoLogin, setVerificandoLogin] = useState(true);
+
+  // --- ESTADOS DO ÁLBUM ---
   const totalFigurinhas = 980;
 
   const nomesConhecidos = {
@@ -91,35 +101,63 @@ export default function ControleFigurinhasCopa2026() {
     });
   };
 
-  const [colecao, setColecao] = React.useState(gerarListaInicial);
-  const [busca, setBusca] = React.useState('');
-  const [filtroAtivo, setFiltroAtivo] = React.useState('todas'); 
+  const [colecao, setColecao] = useState(gerarListaInicial);
+  const [busca, setBusca] = useState('');
+  const [filtroAtivo, setFiltroAtivo] = useState('todas'); 
 
-  React.useEffect(() => {
-    const dadosSalvos = localStorage.getItem('album2026');
-    if (dadosSalvos) {
-      const parsed = JSON.parse(dadosSalvos);
-      const colecaoAtualizada = parsed.map((item) => {
-        const secao = obterSecaoDaFigurinha(item.numero);
-        const numeroNaSecao = item.numero - secao.inicio + 1;
-        const codigoBusca = `${secao.prefixo} ${numeroNaSecao}`;
-        const nomeJogador = nomesConhecidos[codigoBusca] || '';
-        
-        let qtd = item.quantidadeRepetidas || 0;
-        if (qtd === 0 && item.repetida) {
-          qtd = 1;
-        }
-        
-        return { ...item, secaoNome: secao.nome, secaoCor: secao.cor, codigoBusca, nomeJogador, quantidadeRepetidas: qtd };
-      });
-      setColecao(colecaoAtualizada);
-    }
+  // --- EFEITOS DE AUTENTICAÇÃO ---
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setUsuario(user);
+      setVerificandoLogin(false);
+    });
+    return () => unsubscribe();
   }, []);
 
-  React.useEffect(() => {
-    localStorage.setItem('album2026', JSON.stringify(colecao));
-  }, [colecao]);
+  const handleLogin = (e) => {
+    e.preventDefault();
+    setErroLogin('');
+    signInWithEmailAndPassword(auth, email, senha)
+      .catch((error) => {
+        setErroLogin('E-mail ou palavra-passe incorretos. Tente novamente!');
+      });
+  };
 
+  const handleLogout = () => {
+    signOut(auth);
+  };
+
+  // --- EFEITOS DE ARMAZENAMENTO (Ainda Local por enquanto) ---
+  useEffect(() => {
+    if (usuario) {
+      const dadosSalvos = localStorage.getItem('album2026');
+      if (dadosSalvos) {
+        const parsed = JSON.parse(dadosSalvos);
+        const colecaoAtualizada = parsed.map((item) => {
+          const secao = obterSecaoDaFigurinha(item.numero);
+          const numeroNaSecao = item.numero - secao.inicio + 1;
+          const codigoBusca = `${secao.prefixo} ${numeroNaSecao}`;
+          const nomeJogador = nomesConhecidos[codigoBusca] || '';
+          
+          let qtd = item.quantidadeRepetidas || 0;
+          if (qtd === 0 && item.repetida) {
+            qtd = 1;
+          }
+          
+          return { ...item, secaoNome: secao.nome, secaoCor: secao.cor, codigoBusca, nomeJogador, quantidadeRepetidas: qtd };
+        });
+        setColecao(colecaoAtualizada);
+      }
+    }
+  }, [usuario]);
+
+  useEffect(() => {
+    if (usuario) {
+      localStorage.setItem('album2026', JSON.stringify(colecao));
+    }
+  }, [colecao, usuario]);
+
+  // --- FUNÇÕES DO ÁLBUM ---
   const alternarPossui = (numero) => {
     setColecao((prev) =>
       prev.map((item) =>
@@ -150,7 +188,7 @@ export default function ControleFigurinhasCopa2026() {
   const copiarParaWhatsApp = () => {
     const repetidasFiltradas = colecao.filter(item => (item.quantidadeRepetidas || 0) > 0);
     if (repetidasFiltradas.length === 0) {
-      alert("Você ainda não tem figurinhas repetidas marcadas para trocar!");
+      alert("Ainda não tem figurinhas repetidas marcadas para trocar!");
       return;
     }
 
@@ -161,23 +199,82 @@ export default function ControleFigurinhasCopa2026() {
       if (item.quantidadeRepetidas > 1) texto += ` - ${item.quantidadeRepetidas}x`;
       texto += "\n";
     });
-    texto += "\nQuem tiver interesse, me chama!";
+    texto += "\nQuem tiver interesse, mande mensagem!";
 
     navigator.clipboard.writeText(texto)
       .then(() => alert("Lista copiada com sucesso! Agora é só colar no seu WhatsApp."))
       .catch(() => alert("Erro ao copiar a lista. Tente novamente."));
   };
 
+  // --- RENDERIZAÇÃO CONDICIONAL ---
+  if (verificandoLogin) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-100 to-green-100 flex items-center justify-center">
+        <p className="text-2xl font-bold text-blue-600 animate-pulse">A carregar...</p>
+      </div>
+    );
+  }
+
+  if (!usuario) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-100 to-green-100 flex items-center justify-center p-4">
+        <div className="bg-white rounded-3xl shadow-xl p-8 w-full max-w-md border-t-8 border-blue-600">
+          <h1 className="text-3xl font-extrabold mb-2 text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-green-500">
+            Álbum Copa 2026
+          </h1>
+          <p className="text-center text-gray-500 mb-8 font-medium">
+            Inicie sessão para gerir a coleção
+          </p>
+          
+          <form onSubmit={handleLogin} className="flex flex-col gap-4">
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-1">E-mail</label>
+              <input 
+                type="email" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full border-2 border-gray-200 rounded-xl p-3 focus:outline-none focus:border-blue-500 transition-colors"
+                placeholder="pedrinho@exemplo.com"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-1">Palavra-passe</label>
+              <input 
+                type="password" 
+                value={senha}
+                onChange={(e) => setSenha(e.target.value)}
+                className="w-full border-2 border-gray-200 rounded-xl p-3 focus:outline-none focus:border-blue-500 transition-colors"
+                placeholder="******"
+                required
+              />
+            </div>
+            
+            {erroLogin && (
+              <p className="text-red-500 text-sm font-bold text-center mt-2">{erroLogin}</p>
+            )}
+            
+            <button 
+              type="submit"
+              className="w-full mt-4 py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-md transition-colors"
+            >
+              Entrar
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  // Lógica de Filtros
   const faltantesCount = colecao.filter((item) => !item.possui).length;
   const repetidasCount = colecao.reduce((acc, item) => acc + (item.quantidadeRepetidas || 0), 0);
   const progresso = calcularProgresso(colecao);
-
   const termoBusca = busca.trim().toLowerCase();
   let listaFiltrada = colecao;
 
   if (termoBusca !== '') {
     const ehSiglaExata = colecao.some(item => item.codigoBusca.split(' ')[0].toLowerCase() === termoBusca);
-    
     if (ehSiglaExata && termoBusca.length === 3) {
       listaFiltrada = colecao.filter(item => item.codigoBusca.split(' ')[0].toLowerCase() === termoBusca);
     } else {
@@ -202,9 +299,22 @@ export default function ControleFigurinhasCopa2026() {
     <div className="min-h-screen bg-gradient-to-br from-blue-100 to-green-100 p-4">
       <div className="max-w-6xl mx-auto">
         <div className="bg-white rounded-3xl shadow-xl p-6 mb-6 border-t-8 border-blue-600">
-          <h1 className="text-4xl font-extrabold mb-2 text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-green-500">
-            Controle Álbum Copa do Mundo 2026
-          </h1>
+          
+          <div className="flex justify-between items-start mb-2">
+            <div className="flex-1"></div>
+            <h1 className="text-4xl font-extrabold text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-green-500">
+              Controle Álbum Copa do Mundo 2026
+            </h1>
+            <div className="flex-1 flex justify-end">
+              <button 
+                onClick={handleLogout} 
+                className="text-sm font-bold text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 px-4 py-2 rounded-xl transition-colors"
+              >
+                Sair
+              </button>
+            </div>
+          </div>
+          
           <p className="text-center text-gray-500 mb-6 font-medium">
             Panini • 980 figurinhas
           </p>

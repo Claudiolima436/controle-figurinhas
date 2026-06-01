@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { auth } from './firebase';
+import { auth, db } from './firebase';
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 export default function ControleFigurinhasCopa2026() {
-  // --- ESTADOS DE AUTENTICAÇÃO ---
+  // --- ESTADOS DE AUTENTICAÇÃO E DADOS ---
   const [usuario, setUsuario] = useState(null);
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [erroLogin, setErroLogin] = useState('');
   const [verificandoLogin, setVerificandoLogin] = useState(true);
+  const [dadosCarregados, setDadosCarregados] = useState(false);
 
-  // --- ESTADOS DO ÁLBUM ---
+  // --- ESTRUTURA DO ÁLBUM ---
   const totalFigurinhas = 980;
 
   const nomesConhecidos = {
@@ -67,8 +69,8 @@ export default function ControleFigurinhasCopa2026() {
       { nome: 'Argentina', prefixo: 'ARG', inicio: 821, fim: 840, cor: 'bg-sky-400' },
       { nome: 'Argélia', prefixo: 'ALG', inicio: 841, fim: 860, cor: 'bg-green-500' },
       { nome: 'Áustria', prefixo: 'AUT', inicio: 861, fim: 880, cor: 'bg-red-700' },
-      { nome: 'Jordânia', prefixo: 'JOR', inicio: 881, fim: 900, cor: 'bg-white text-gray-800' },
-      { nome: 'Inglaterra', prefixo: 'ENG', inicio: 901, fim: 920, cor: 'bg-gray-400' },
+      { nome: 'Jordânia', prefixo: 'JOR', inicio: 881, fim: 900, cor: 'bg-gray-400' },
+      { nome: 'Inglaterra', prefixo: 'ENG', inicio: 901, fim: 920, cor: 'bg-gray-500' },
       { nome: 'Croácia', prefixo: 'CRO', inicio: 921, fim: 940, cor: 'bg-red-500' },
       { nome: 'Gana', prefixo: 'GHA', inicio: 941, fim: 960, cor: 'bg-yellow-500' },
       { nome: 'Panamá', prefixo: 'PAN', inicio: 961, fim: 980, cor: 'bg-blue-500' }
@@ -77,8 +79,8 @@ export default function ControleFigurinhasCopa2026() {
     return secoesOficiais.find(secao => numero >= secao.inicio && numero <= secao.fim) || secoesOficiais[0];
   };
 
-  const calcularProgresso = (colecao) => {
-    const preenchidas = colecao.filter((item) => item.possui).length;
+  const calcularProgresso = (colecaoData) => {
+    const preenchidas = colecaoData.filter((item) => item.possui).length;
     return ((preenchidas / totalFigurinhas) * 100).toFixed(1);
   };
 
@@ -118,44 +120,76 @@ export default function ControleFigurinhasCopa2026() {
     e.preventDefault();
     setErroLogin('');
     signInWithEmailAndPassword(auth, email, senha)
-      .catch((error) => {
+      .catch(() => {
         setErroLogin('E-mail ou palavra-passe incorretos. Tente novamente!');
       });
   };
 
   const handleLogout = () => {
     signOut(auth);
+    setDadosCarregados(false);
+    setColecao(gerarListaInicial());
   };
 
-  // --- EFEITOS DE ARMAZENAMENTO (Ainda Local por enquanto) ---
+  // --- BUSCANDO DADOS DO FIRESTORE (NUVEM) ---
   useEffect(() => {
     if (usuario) {
-      const dadosSalvos = localStorage.getItem('album2026');
-      if (dadosSalvos) {
-        const parsed = JSON.parse(dadosSalvos);
-        const colecaoAtualizada = parsed.map((item) => {
-          const secao = obterSecaoDaFigurinha(item.numero);
-          const numeroNaSecao = item.numero - secao.inicio + 1;
-          const codigoBusca = `${secao.prefixo} ${numeroNaSecao}`;
-          const nomeJogador = nomesConhecidos[codigoBusca] || '';
-          
-          let qtd = item.quantidadeRepetidas || 0;
-          if (qtd === 0 && item.repetida) {
-            qtd = 1;
+      const carregarDadosDoBanco = async () => {
+        try {
+          const docRef = doc(db, 'colecoes', usuario.uid);
+          const docSnap = await getDoc(docRef);
+
+          if (docSnap.exists()) {
+            const dadosDoBanco = docSnap.data().figurinhas;
+            const colecaoAtualizada = gerarListaInicial().map(item => {
+              const salvo = dadosDoBanco.find(d => d.numero === item.numero);
+              if (salvo) {
+                return { 
+                  ...item, 
+                  possui: salvo.possui, 
+                  quantidadeRepetidas: salvo.quantidadeRepetidas || 0 
+                };
+              }
+              return item;
+            });
+            setColecao(colecaoAtualizada);
           }
-          
-          return { ...item, secaoNome: secao.nome, secaoCor: secao.cor, codigoBusca, nomeJogador, quantidadeRepetidas: qtd };
-        });
-        setColecao(colecaoAtualizada);
-      }
+          setDadosCarregados(true);
+        } catch (error) {
+          console.error("Erro ao carregar dados:", error);
+          setDadosCarregados(true);
+        }
+      };
+      carregarDadosDoBanco();
     }
   }, [usuario]);
 
+  // --- SALVANDO DADOS NO FIRESTORE (COM DEBOUNCE) ---
   useEffect(() => {
-    if (usuario) {
-      localStorage.setItem('album2026', JSON.stringify(colecao));
+    if (usuario && dadosCarregados) {
+      const salvarDadosNoBanco = async () => {
+        try {
+          const docRef = doc(db, 'colecoes', usuario.uid);
+          // Filtramos para salvar só os dados que importam, economizando banda
+          const figurinhasParaSalvar = colecao.map(item => ({
+            numero: item.numero,
+            possui: item.possui,
+            quantidadeRepetidas: item.quantidadeRepetidas || 0
+          }));
+          await setDoc(docRef, { figurinhas: figurinhasParaSalvar });
+        } catch (error) {
+          console.error("Erro ao salvar dados:", error);
+        }
+      };
+
+      // O Debounce aguarda 500ms após o último clique para enviar tudo junto
+      const timeoutId = setTimeout(() => {
+        salvarDadosNoBanco();
+      }, 500);
+
+      return () => clearTimeout(timeoutId);
     }
-  }, [colecao, usuario]);
+  }, [colecao, usuario, dadosCarregados]);
 
   // --- FUNÇÕES DO ÁLBUM ---
   const alternarPossui = (numero) => {
@@ -206,7 +240,7 @@ export default function ControleFigurinhasCopa2026() {
       .catch(() => alert("Erro ao copiar a lista. Tente novamente."));
   };
 
-  // --- RENDERIZAÇÃO CONDICIONAL ---
+  // --- RENDERIZAÇÃO CONDICIONAL (TELA DE LOGIN) ---
   if (verificandoLogin) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-100 to-green-100 flex items-center justify-center">
@@ -266,11 +300,12 @@ export default function ControleFigurinhasCopa2026() {
     );
   }
 
-  // Lógica de Filtros
+  // Lógica de Filtros e Painéis
   const faltantesCount = colecao.filter((item) => !item.possui).length;
   const repetidasCount = colecao.reduce((acc, item) => acc + (item.quantidadeRepetidas || 0), 0);
   const progresso = calcularProgresso(colecao);
   const termoBusca = busca.trim().toLowerCase();
+  
   let listaFiltrada = colecao;
 
   if (termoBusca !== '') {
@@ -325,7 +360,7 @@ export default function ControleFigurinhasCopa2026() {
               <h2 className="text-3xl font-black text-gray-800">980</h2>
             </div>
             <div className="bg-gradient-to-br from-green-50 to-green-200 rounded-2xl p-4 shadow-md border border-green-100">
-              <p className="text-sm text-green-700 font-semibold uppercase">Concluído</p>
+              <p className="text-sm text-green-700 font-semibold uppercase">Taxa de Conclusão</p>
               <h2 className="text-3xl font-black text-green-800">{progresso}%</h2>
             </div>
             <div className="bg-gradient-to-br from-red-50 to-red-200 rounded-2xl p-4 shadow-md border border-red-100">
@@ -386,62 +421,68 @@ export default function ControleFigurinhasCopa2026() {
           </button>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-          {listaFiltrada.map((item) => (
-            <div
-              key={item.numero}
-              className={`rounded-2xl overflow-hidden shadow-lg transition-transform transform hover:scale-105 bg-white border-2 flex flex-col ${
-                item.possui ? 'border-green-500' : 'border-transparent'
-              }`}
-            >
-              <div className={`${item.secaoCor} px-3 py-2 text-white text-xs font-bold text-center uppercase tracking-wider truncate`}>
-                {item.secaoNome}
-              </div>
-              
-              <div className="p-4 flex-1 flex flex-col justify-between">
-                <div className="flex flex-col justify-center items-center mb-4 min-h-[60px]">
-                  <span className={`text-2xl font-black ${item.possui ? 'text-green-600' : 'text-gray-700'}`}>
-                    {item.codigoBusca}
-                  </span>
-                  {item.nomeJogador && (
-                    <span className="text-sm font-bold text-gray-500 mt-1 text-center leading-tight">
-                      {item.nomeJogador}
-                    </span>
-                  )}
+        {!dadosCarregados ? (
+          <div className="flex justify-center p-10">
+            <p className="text-xl font-bold text-blue-600 animate-bounce">Sincronizando com a nuvem...</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {listaFiltrada.map((item) => (
+              <div
+                key={item.numero}
+                className={`rounded-2xl overflow-hidden shadow-lg transition-transform transform hover:scale-105 bg-white border-2 flex flex-col ${
+                  item.possui ? 'border-green-500' : 'border-transparent'
+                }`}
+              >
+                <div className={`${item.secaoCor} px-3 py-2 text-white text-xs font-bold text-center uppercase tracking-wider truncate`}>
+                  {item.secaoNome}
                 </div>
-
-                <div className="flex flex-col gap-3">
-                  <button
-                    onClick={() => alternarPossui(item.numero)}
-                    className={`rounded-xl p-2 text-white font-bold transition-colors ${
-                      item.possui ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-300 hover:bg-gray-400 text-gray-700'
-                    }`}
-                  >
-                    {item.possui ? '✓ Tenho' : 'Marcar'}
-                  </button>
-
-                  <div className="flex items-center justify-between bg-gray-100 rounded-xl p-1 border border-gray-200">
-                    <button 
-                      onClick={() => removerRepetida(item.numero)}
-                      className="w-8 h-8 flex items-center justify-center bg-white rounded-lg font-bold text-gray-600 shadow hover:bg-gray-50 transition-colors"
-                    >
-                      -
-                    </button>
-                    <span className={`font-bold text-sm ${item.quantidadeRepetidas > 0 ? 'text-yellow-600' : 'text-gray-400'}`}>
-                      {item.quantidadeRepetidas || 0} Rep.
+                
+                <div className="p-4 flex-1 flex flex-col justify-between">
+                  <div className="flex flex-col justify-center items-center mb-4 min-h-[60px]">
+                    <span className={`text-2xl font-black ${item.possui ? 'text-green-600' : 'text-gray-700'}`}>
+                      {item.codigoBusca}
                     </span>
-                    <button 
-                      onClick={() => adicionarRepetida(item.numero)}
-                      className="w-8 h-8 flex items-center justify-center bg-yellow-400 rounded-lg font-bold text-yellow-900 shadow hover:bg-yellow-500 transition-colors"
+                    {item.nomeJogador && (
+                      <span className="text-sm font-bold text-gray-500 mt-1 text-center leading-tight">
+                        {item.nomeJogador}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col gap-3">
+                    <button
+                      onClick={() => alternarPossui(item.numero)}
+                      className={`rounded-xl p-2 text-white font-bold transition-colors ${
+                        item.possui ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-300 hover:bg-gray-400 text-gray-700'
+                      }`}
                     >
-                      +
+                      {item.possui ? '✓ Tenho' : 'Marcar'}
                     </button>
+
+                    <div className="flex items-center justify-between bg-gray-100 rounded-xl p-1 border border-gray-200">
+                      <button 
+                        onClick={() => removerRepetida(item.numero)}
+                        className="w-8 h-8 flex items-center justify-center bg-white rounded-lg font-bold text-gray-600 shadow hover:bg-gray-50 transition-colors"
+                      >
+                        -
+                      </button>
+                      <span className={`font-bold text-sm ${item.quantidadeRepetidas > 0 ? 'text-yellow-600' : 'text-gray-400'}`}>
+                        {item.quantidadeRepetidas || 0} Rep.
+                      </span>
+                      <button 
+                        onClick={() => adicionarRepetida(item.numero)}
+                        className="w-8 h-8 flex items-center justify-center bg-yellow-400 rounded-lg font-bold text-yellow-900 shadow hover:bg-yellow-500 transition-colors"
+                      >
+                        +
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

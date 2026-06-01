@@ -4,7 +4,6 @@ import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebas
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 export default function ControleFigurinhasCopa2026() {
-  // --- ESTADOS DE AUTENTICAÇÃO E DADOS ---
   const [usuario, setUsuario] = useState(null);
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
@@ -12,7 +11,6 @@ export default function ControleFigurinhasCopa2026() {
   const [verificandoLogin, setVerificandoLogin] = useState(true);
   const [dadosCarregados, setDadosCarregados] = useState(false);
 
-  // --- ESTRUTURA DO ÁLBUM ---
   const totalFigurinhas = 980;
 
   const nomesConhecidos = {
@@ -75,13 +73,13 @@ export default function ControleFigurinhasCopa2026() {
       { nome: 'Gana', prefixo: 'GHA', inicio: 941, fim: 960, cor: 'bg-yellow-500' },
       { nome: 'Panamá', prefixo: 'PAN', inicio: 961, fim: 980, cor: 'bg-blue-500' }
     ];
-    
     return secoesOficiais.find(secao => numero >= secao.inicio && numero <= secao.fim) || secoesOficiais[0];
   };
 
   const calcularProgresso = (colecaoData) => {
     const preenchidas = colecaoData.filter((item) => item.possui).length;
-    return ((preenchidas / totalFigurinhas) * 100).toFixed(1);
+    const porcentagem = (preenchidas / totalFigurinhas) * 100;
+    return porcentagem.toFixed(1).replace('.', ',');
   };
 
   const gerarListaInicial = () => {
@@ -107,7 +105,6 @@ export default function ControleFigurinhasCopa2026() {
   const [busca, setBusca] = useState('');
   const [filtroAtivo, setFiltroAtivo] = useState('todas'); 
 
-  // --- EFEITOS DE AUTENTICAÇÃO ---
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUsuario(user);
@@ -131,7 +128,6 @@ export default function ControleFigurinhasCopa2026() {
     setColecao(gerarListaInicial());
   };
 
-  // --- BUSCANDO DADOS DO FIRESTORE (NUVEM) ---
   useEffect(() => {
     if (usuario) {
       const carregarDadosDoBanco = async () => {
@@ -164,13 +160,11 @@ export default function ControleFigurinhasCopa2026() {
     }
   }, [usuario]);
 
-  // --- SALVANDO DADOS NO FIRESTORE (COM DEBOUNCE) ---
   useEffect(() => {
     if (usuario && dadosCarregados) {
       const salvarDadosNoBanco = async () => {
         try {
           const docRef = doc(db, 'colecoes', usuario.uid);
-          // Filtramos para salvar só os dados que importam, economizando banda
           const figurinhasParaSalvar = colecao.map(item => ({
             numero: item.numero,
             possui: item.possui,
@@ -182,7 +176,6 @@ export default function ControleFigurinhasCopa2026() {
         }
       };
 
-      // O Debounce aguarda 500ms após o último clique para enviar tudo junto
       const timeoutId = setTimeout(() => {
         salvarDadosNoBanco();
       }, 500);
@@ -191,7 +184,6 @@ export default function ControleFigurinhasCopa2026() {
     }
   }, [colecao, usuario, dadosCarregados]);
 
-  // --- FUNÇÕES DO ÁLBUM ---
   const alternarPossui = (numero) => {
     setColecao((prev) =>
       prev.map((item) =>
@@ -240,7 +232,6 @@ export default function ControleFigurinhasCopa2026() {
       .catch(() => alert("Erro ao copiar a lista. Tente novamente."));
   };
 
-  // --- RENDERIZAÇÃO CONDICIONAL (TELA DE LOGIN) ---
   if (verificandoLogin) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-100 to-green-100 flex items-center justify-center">
@@ -259,7 +250,6 @@ export default function ControleFigurinhasCopa2026() {
           <p className="text-center text-gray-500 mb-8 font-medium">
             Inicie sessão para gerir a coleção
           </p>
-          
           <form onSubmit={handleLogin} className="flex flex-col gap-4">
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-1">E-mail</label>
@@ -283,11 +273,9 @@ export default function ControleFigurinhasCopa2026() {
                 required
               />
             </div>
-            
             {erroLogin && (
               <p className="text-red-500 text-sm font-bold text-center mt-2">{erroLogin}</p>
             )}
-            
             <button 
               type="submit"
               className="w-full mt-4 py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-md transition-colors"
@@ -300,7 +288,6 @@ export default function ControleFigurinhasCopa2026() {
     );
   }
 
-  // Lógica de Filtros e Painéis
   const faltantesCount = colecao.filter((item) => !item.possui).length;
   const repetidasCount = colecao.reduce((acc, item) => acc + (item.quantidadeRepetidas || 0), 0);
   const progresso = calcularProgresso(colecao);
@@ -334,7 +321,6 @@ export default function ControleFigurinhasCopa2026() {
     <div className="min-h-screen bg-gradient-to-br from-blue-100 to-green-100 p-4">
       <div className="max-w-6xl mx-auto">
         <div className="bg-white rounded-3xl shadow-xl p-6 mb-6 border-t-8 border-blue-600">
-          
           <div className="flex justify-between items-start mb-2">
             <div className="flex-1"></div>
             <h1 className="text-4xl font-extrabold text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-green-500">
@@ -349,11 +335,9 @@ export default function ControleFigurinhasCopa2026() {
               </button>
             </div>
           </div>
-          
           <p className="text-center text-gray-500 mb-6 font-medium">
             Panini • 980 figurinhas
           </p>
-
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="bg-gradient-to-br from-gray-50 to-gray-200 rounded-2xl p-4 shadow-md border border-gray-100">
               <p className="text-sm text-gray-600 font-semibold uppercase">Total</p>
@@ -382,7 +366,6 @@ export default function ControleFigurinhasCopa2026() {
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
           />
-          
           <div className="flex flex-wrap gap-2 mt-4 pb-2">
             <button
               onClick={() => setFiltroAtivo('todas')}
@@ -409,13 +392,12 @@ export default function ControleFigurinhasCopa2026() {
               Repetidas
             </button>
           </div>
-          
           <button
             onClick={copiarParaWhatsApp}
             className="w-full mt-2 py-3 px-4 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold shadow-md transition-colors flex items-center justify-center gap-2"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
             </svg>
             Copiar Lista de Repetidas para WhatsApp
           </button>
@@ -437,7 +419,6 @@ export default function ControleFigurinhasCopa2026() {
                 <div className={`${item.secaoCor} px-3 py-2 text-white text-xs font-bold text-center uppercase tracking-wider truncate`}>
                   {item.secaoNome}
                 </div>
-                
                 <div className="p-4 flex-1 flex flex-col justify-between">
                   <div className="flex flex-col justify-center items-center mb-4 min-h-[60px]">
                     <span className={`text-2xl font-black ${item.possui ? 'text-green-600' : 'text-gray-700'}`}>
@@ -449,7 +430,6 @@ export default function ControleFigurinhasCopa2026() {
                       </span>
                     )}
                   </div>
-
                   <div className="flex flex-col gap-3">
                     <button
                       onClick={() => alternarPossui(item.numero)}
@@ -459,7 +439,6 @@ export default function ControleFigurinhasCopa2026() {
                     >
                       {item.possui ? '✓ Tenho' : 'Marcar'}
                     </button>
-
                     <div className="flex items-center justify-between bg-gray-100 rounded-xl p-1 border border-gray-200">
                       <button 
                         onClick={() => removerRepetida(item.numero)}

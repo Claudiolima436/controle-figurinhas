@@ -42,7 +42,7 @@ export default function ControleFigurinhasCopa2026() {
       { nome: 'Bósnia e Herzegovina', prefixo: 'BIH', inicio: 521, fim: 540, cor: 'bg-blue-900' },
       { nome: 'Catar', prefixo: 'QAT', inicio: 541, fim: 560, cor: 'bg-red-800' },
       { nome: 'Suíça', prefixo: 'SUI', inicio: 561, fim: 580, cor: 'bg-red-600' },
-      { nome: 'USA', prefixo: 'USA', inicio: 581, fim: 600, cor: 'bg-blue-600' },
+      { nome: 'Estados Unidos', prefixo: 'EUA', inicio: 581, fim: 600, cor: 'bg-blue-600' },
       { nome: 'Paraguai', prefixo: 'PAR', inicio: 601, fim: 620, cor: 'bg-red-700' },
       { nome: 'Austrália', prefixo: 'AUS', inicio: 621, fim: 640, cor: 'bg-yellow-400' },
       { nome: 'Turquia', prefixo: 'TUR', inicio: 641, fim: 660, cor: 'bg-red-600' },
@@ -140,7 +140,7 @@ export default function ControleFigurinhasCopa2026() {
     setColecao((prev) =>
       prev.map((item) => {
         if (item.numero === numero && (item.quantidadeRepetidas || 0) > 0) {
-          return { ...item, quantityRepetidas: item.quantidadeRepetidas - 1 };
+          return { ...item, quantidadeRepetidas: item.quantidadeRepetidas - 1 };
         }
         return item;
       })
@@ -201,7 +201,7 @@ export default function ControleFigurinhasCopa2026() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 to-green-100 p-4">
       <div className="max-w-6xl mx-auto">
-        <div className="bg-white rounded-3xl shadow-xl p-6 mb-6 border-t-8 border-blue-660">
+        <div className="bg-white rounded-3xl shadow-xl p-6 mb-6 border-t-8 border-blue-600">
           <h1 className="text-4xl font-extrabold mb-2 text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-green-500">
             Controle Álbum Copa do Mundo 2026
           </h1>

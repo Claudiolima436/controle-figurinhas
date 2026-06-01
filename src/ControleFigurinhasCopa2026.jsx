@@ -4,6 +4,7 @@ import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebas
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 export default function ControleFigurinhasCopa2026() {
+  // --- ESTADOS DE AUTENTICAÇÃO E DADOS ---
   const [usuario, setUsuario] = useState(null);
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
@@ -11,6 +12,7 @@ export default function ControleFigurinhasCopa2026() {
   const [verificandoLogin, setVerificandoLogin] = useState(true);
   const [dadosCarregados, setDadosCarregados] = useState(false);
 
+  // --- ESTRUTURA DO ÁLBUM ---
   const totalFigurinhas = 980;
 
   const nomesConhecidos = {
@@ -105,6 +107,7 @@ export default function ControleFigurinhasCopa2026() {
   const [busca, setBusca] = useState('');
   const [filtroAtivo, setFiltroAtivo] = useState('todas'); 
 
+  // --- EFEITOS DE AUTENTICAÇÃO ---
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUsuario(user);
@@ -128,6 +131,7 @@ export default function ControleFigurinhasCopa2026() {
     setColecao(gerarListaInicial());
   };
 
+  // --- BUSCANDO DADOS DO FIRESTORE (NUVEM) ---
   useEffect(() => {
     if (usuario) {
       const carregarDadosDoBanco = async () => {
@@ -160,6 +164,7 @@ export default function ControleFigurinhasCopa2026() {
     }
   }, [usuario]);
 
+  // --- SALVANDO DADOS NO FIRESTORE (COM DEBOUNCE) ---
   useEffect(() => {
     if (usuario && dadosCarregados) {
       const salvarDadosNoBanco = async () => {
@@ -184,6 +189,7 @@ export default function ControleFigurinhasCopa2026() {
     }
   }, [colecao, usuario, dadosCarregados]);
 
+  // --- FUNÇÕES DO ÁLBUM ---
   const alternarPossui = (numero) => {
     setColecao((prev) =>
       prev.map((item) =>
@@ -341,7 +347,7 @@ export default function ControleFigurinhasCopa2026() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="bg-gradient-to-br from-gray-50 to-gray-200 rounded-2xl p-4 shadow-md border border-gray-100">
               <p className="text-sm text-gray-600 font-semibold uppercase">Total</p>
-              <h2 className="text-3xl font-black text-gray-800">980</h2>
+              <h2 className="text-3xl font-black text-gray-800">{totalFigurinhas}</h2>
             </div>
             <div className="bg-gradient-to-br from-green-50 to-green-200 rounded-2xl p-4 shadow-md border border-green-100">
               <p className="text-sm text-green-700 font-semibold uppercase">Taxa de Conclusão</p>

@@ -42,7 +42,7 @@ export default function ControleFigurinhasCopa2026() {
       { nome: 'Bósnia e Herzegovina', prefixo: 'BIH', inicio: 521, fim: 540, cor: 'bg-blue-900' },
       { nome: 'Catar', prefixo: 'QAT', inicio: 541, fim: 560, cor: 'bg-red-800' },
       { nome: 'Suíça', prefixo: 'SUI', inicio: 561, fim: 580, cor: 'bg-red-600' },
-      { nome: 'Estados Unidos', prefixo: 'EUA', inicio: 581, fim: 600, cor: 'bg-blue-600' },
+      { nome: 'USA', prefixo: 'USA', inicio: 581, fim: 600, cor: 'bg-blue-600' },
       { nome: 'Paraguai', prefixo: 'PAR', inicio: 601, fim: 620, cor: 'bg-red-700' },
       { nome: 'Austrália', prefixo: 'AUS', inicio: 621, fim: 640, cor: 'bg-yellow-400' },
       { nome: 'Turquia', prefixo: 'TUR', inicio: 641, fim: 660, cor: 'bg-red-600' },

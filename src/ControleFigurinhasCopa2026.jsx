@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { auth, db } from './firebase';
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { carregarJogadores } from './utils/carregarJogadores';
+import carregarJogadores from './utils/carregarJogadores';
 
 export default function ControleFigurinhasCopa2026() {
   // --- ESTADOS DE AUTENTICAÇÃO E DADOS ---

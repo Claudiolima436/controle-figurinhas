@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { auth, db } from './firebase';
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { carregarJogadores } from './utils/carregarJogadores';
 
 export default function ControleFigurinhasCopa2026() {
   // --- ESTADOS DE AUTENTICAÇÃO E DADOS ---
@@ -15,13 +16,7 @@ export default function ControleFigurinhasCopa2026() {
   // --- ESTRUTURA DO ÁLBUM ---
   const totalFigurinhas = 980;
 
-  const nomesConhecidos = {
-    "ECU 16": "Gonzalo Plata",
-    "BRA 7": "Vinícius Júnior",
-    "BRA 10": "Rodrygo",
-    "URU 10": "Giorgian de Arrascaeta",
-    "ARG 10": "Lionel Messi",
-  };
+  const [nomesConhecidos, setNomesConhecidos] = useState({});
 
   const obterSecaoDaFigurinha = (numero) => {
     const secoesOficiais = [
@@ -107,9 +102,25 @@ export default function ControleFigurinhasCopa2026() {
     });
   };
 
-  const [colecao, setColecao] = useState(gerarListaInicial);
+  const [colecao, setColecao] = useState([]);
   const [busca, setBusca] = useState('');
   const [filtroAtivo, setFiltroAtivo] = useState('todas'); 
+
+  // --- CARREGANDO NOMES DOS JOGADORES PELO EXCEL ---
+  useEffect(() => {
+    carregarJogadores()
+      .then((dados) => {
+        setNomesConhecidos(dados);
+      })
+      .catch((erro) => {
+        console.error('Erro ao carregar jogadores:', erro);
+      });
+  }, []);
+
+  // Sempre que os nomes forem carregados/atualizados, recria a lista do álbum
+  useEffect(() => {
+    setColecao(gerarListaInicial());
+  }, [nomesConhecidos]);
 
   // --- EFEITOS DE AUTENTICAÇÃO ---
   useEffect(() => {
@@ -166,7 +177,7 @@ export default function ControleFigurinhasCopa2026() {
       };
       carregarDadosDoBanco();
     }
-  }, [usuario]);
+  }, [usuario, nomesConhecidos]);
 
   // --- SALVANDO DADOS NO FIRESTORE (COM DEBOUNCE) ---
   useEffect(() => {

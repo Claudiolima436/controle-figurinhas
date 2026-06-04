@@ -81,6 +81,10 @@ export default function ControleFigurinhasCopa2026() {
   const calcularProgresso = (colecaoData) => {
     const preenchidas = colecaoData.filter((item) => item.possui).length;
     const porcentagem = (preenchidas / totalFigurinhas) * 100;
+    
+    // Auditoria para forçar a atualização do Git e verificar os dados
+    console.log("Total:", totalFigurinhas, "Preenchidas:", preenchidas, "Porcentagem:", porcentagem);
+    
     return porcentagem.toFixed(1).replace('.', ',');
   };
 

@@ -437,9 +437,20 @@ export default function ControleFigurinhasCopa2026() {
                   item.possui ? 'border-green-500' : 'border-transparent'
                 }`}
               >
-                <div className={`${item.secaoCor} px-3 py-2 text-white text-xs font-bold text-center uppercase tracking-wider truncate`}>
-                  {item.secaoNome}
-                </div>
+                <div
+  className={`${item.secaoCor} px-3 py-3 text-white text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2`}
+>
+  <img
+    src={`/escudos/${item.codigoBusca.split(' ')[0]}.png`}
+    alt={item.secaoNome}
+    className="w-10 h-10 object-contain bg-white rounded-full p-1 shadow-sm"
+    onError={(e) => {
+      e.currentTarget.style.display = "none";
+    }}
+  />
+
+  <span>{item.secaoNome}</span>
+</div>
                 <div className="p-4 flex-1 flex flex-col justify-between">
                   <div className="flex flex-col justify-center items-center mb-4 min-h-[60px]">
                     <span className={`text-2xl font-black ${item.possui ? 'text-green-600' : 'text-gray-700'}`}>

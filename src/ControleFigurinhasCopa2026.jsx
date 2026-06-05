@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { auth, db } from './firebase';
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import carregarJogadores from './utils/carregarJogadores';
 
 export default function ControleFigurinhasCopa2026() {
@@ -141,10 +141,23 @@ export default function ControleFigurinhasCopa2026() {
   };
 
   const handleLogout = () => {
-    signOut(auth);
-    setDadosCarregados(false);
-    setColecao(gerarListaInicial());
-  };
+  signOut(auth);
+  setDadosCarregados(false);
+  setColecao(gerarListaInicial());
+};
+
+// REGISTRA O USUÁRIO NO FIRESTORE
+useEffect(() => {
+  if (usuario) {
+    setDoc(
+      doc(db, 'usuarios', usuario.uid),
+      {
+        email: usuario.email
+      },
+      { merge: true }
+    );
+  }
+}, [usuario]);
 
   // --- BUSCANDO DADOS DO FIRESTORE (NUVEM) ---
   useEffect(() => {

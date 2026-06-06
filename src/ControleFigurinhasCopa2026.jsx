@@ -104,7 +104,13 @@ export default function ControleFigurinhasCopa2026() {
 
   const [colecao, setColecao] = useState([]);
   const [busca, setBusca] = useState('');
-  const [filtroAtivo, setFiltroAtivo] = useState('todas'); 
+  const [filtroAtivo, setFiltroAtivo] = useState('todas');
+
+  const [emailComparacao, setEmailComparacao] = useState('');
+  const [resultadoComparacao, setResultadoComparacao] = useState(null);
+  const [erroComparacao, setErroComparacao] = useState('');
+  const [carregandoComparacao, setCarregandoComparacao] = useState(false);
+  
 
   // --- CARREGANDO NOMES DOS JOGADORES PELO EXCEL ---
   useEffect(() => {
@@ -244,6 +250,73 @@ useEffect(() => {
       })
     );
   };
+
+  const compararColecoes = async () => {
+  try {
+    setErroComparacao('');
+    setResultadoComparacao(null);
+    setCarregandoComparacao(true);
+
+    const q = query(
+      collection(db, 'usuarios'),
+      where('email', '==', emailComparacao)
+    );
+
+    const usuarioSnapshot = await getDocs(q);
+
+    if (usuarioSnapshot.empty) {
+      setErroComparacao('Usuário não encontrado.');
+      return;
+    }
+
+    const usuarioComparado = usuarioSnapshot.docs[0];
+
+    const docColecao = await getDoc(
+      doc(db, 'colecoes', usuarioComparado.id)
+    );
+
+    if (!docColecao.exists()) {
+      setErroComparacao('Coleção não encontrada.');
+      return;
+    }
+
+  const colecaoOutroUsuario = docColecao.data().figurinhas;
+
+  const euPreciso = colecao.filter(item => !item.possui);
+
+  const eleTemRepetida = colecaoOutroUsuario.filter(
+  item => (item.quantidadeRepetidas || 0) > 0
+);
+
+const euTenhoRepetida = colecao.filter(
+  item => (item.quantidadeRepetidas || 0) > 0
+);
+
+const elePrecisa = colecaoOutroUsuario.filter(
+  item => !item.possui
+);
+
+const trocasParaMim = eleTemRepetida.filter(rep =>
+  euPreciso.some(falta => falta.numero === rep.numero)
+);
+
+const trocasParaEle = euTenhoRepetida.filter(rep =>
+  elePrecisa.some(falta => falta.numero === rep.numero)
+);
+
+setResultadoComparacao({
+  email: emailComparacao,
+  trocasParaMim,
+  trocasParaEle
+});
+
+  } catch (erro) {
+    console.error(erro);
+    setErroComparacao('Erro ao comparar coleções.');
+  } finally {
+    setCarregandoComparacao(false);
+  }
+};
 
   const copiarParaWhatsApp = () => {
     const repetidasFiltradas = colecao.filter(item => (item.quantidadeRepetidas || 0) > 0);
@@ -435,7 +508,109 @@ useEffect(() => {
             </svg>
             Copiar Lista de Repetidas para WhatsApp
           </button>
-        </div>
+      
+
+<div className="mt-4 bg-blue-50 rounded-2xl p-4 border border-blue-100">
+  <h3 className="text-lg font-black text-blue-700 mb-3">
+    🤝 Comparar Coleções
+  </h3>
+
+  <div className="flex flex-col md:flex-row gap-3">
+    <input
+      type="email"
+      placeholder="Digite o e-mail do outro colecionador"
+      className="flex-1 border-2 border-blue-100 rounded-xl p-3 focus:outline-none focus:border-blue-500"
+      value={emailComparacao}
+      onChange={(e) => setEmailComparacao(e.target.value)}
+    />
+
+    <button
+      onClick={compararColecoes}
+      className="py-3 px-5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-md transition-colors"
+    >
+      {carregandoComparacao ? 'Comparando...' : 'Comparar'}
+    </button>
+  </div>
+
+  {erroComparacao && (
+    <p className="mt-3 text-red-600 font-bold">
+      {erroComparacao}
+    </p>
+  )}
+
+  {resultadoComparacao && (
+  <div className="mt-4 bg-white rounded-xl p-4 shadow-sm">
+    <p className="font-bold text-gray-700 mb-3">
+      Usuário comparado: {resultadoComparacao.email}
+    </p>
+
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+      <div className="bg-green-50 border border-green-100 rounded-xl p-3">
+        <h4 className="font-black text-green-700 mb-2">
+          Ele tem repetidas que você precisa
+        </h4>
+
+        {resultadoComparacao.trocasParaMim.length === 0 ? (
+          <p className="text-sm text-gray-500">
+            Nenhuma oportunidade encontrada.
+          </p>
+        ) : (
+          <ul className="text-sm text-gray-700 space-y-1">
+            {resultadoComparacao.trocasParaMim.map((item) => {
+              const figurinha = colecao.find(
+                f => f.numero === item.numero
+              );
+
+              return (
+                <li key={item.numero}>
+                  ⚽ {figurinha?.codigoBusca || item.numero}
+                  {figurinha?.nomeJogador
+                    ? ` - ${figurinha.nomeJogador}`
+                    : ''}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+
+      <div className="bg-yellow-50 border border-yellow-100 rounded-xl p-3">
+        <h4 className="font-black text-yellow-700 mb-2">
+          Você tem repetidas que ele precisa
+        </h4>
+
+        {resultadoComparacao.trocasParaEle.length === 0 ? (
+          <p className="text-sm text-gray-500">
+            Nenhuma oportunidade encontrada.
+          </p>
+        ) : (
+          <ul className="text-sm text-gray-700 space-y-1">
+            {resultadoComparacao.trocasParaEle.map((item) => (
+              <li key={item.numero}>
+                ⚽ {item.codigoBusca || item.numero}
+                {item.nomeJogador
+                  ? ` - ${item.nomeJogador}`
+                  : ''}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+    </div>
+
+    <p className="mt-4 text-blue-700 font-black">
+      Total de oportunidades: {
+        resultadoComparacao.trocasParaMim.length +
+        resultadoComparacao.trocasParaEle.length
+      }
+    </p>
+  </div>
+)}
+</div>
+
+</div>
 
         {!dadosCarregados ? (
           <div className="flex justify-center p-10">

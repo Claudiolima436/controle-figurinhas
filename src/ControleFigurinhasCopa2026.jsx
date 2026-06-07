@@ -102,6 +102,38 @@ export default function ControleFigurinhasCopa2026() {
     });
   };
 
+  const calcularProgressoPorSelecao = () => {
+  const resumo = {};
+
+  colecao.forEach((item) => {
+    const selecao = item.secaoNome;
+    const prefixo = item.codigoBusca.split(' ')[0];
+
+    if (!resumo[selecao]) {
+      resumo[selecao] = {
+        selecao,
+        prefixo,
+        total: 0,
+        possui: 0
+      };
+    }
+
+    resumo[selecao].total += 1;
+
+    if (item.possui) {
+      resumo[selecao].possui += 1;
+    }
+  });
+
+  return Object.values(resumo)
+    .map((item) => ({
+      ...item,
+      percentual: Math.round((item.possui / item.total) * 100),
+      completa: item.possui === item.total
+    }))
+    .sort((a, b) => b.percentual - a.percentual);
+};
+
   const [colecao, setColecao] = useState([]);
   const [busca, setBusca] = useState('');
   const [filtroAtivo, setFiltroAtivo] = useState('todas');
@@ -396,11 +428,17 @@ setResultadoComparacao({
   }
 
   const faltantesCount = colecao.filter((item) => !item.possui).length;
-  const repetidasCount = colecao.reduce((acc, item) => acc + (item.quantidadeRepetidas || 0), 0);
-  const progresso = calcularProgresso(colecao);
-  const termoBusca = busca.trim().toLowerCase();
-  
-  let listaFiltrada = colecao;
+const repetidasCount = colecao.reduce((acc, item) => acc + (item.quantidadeRepetidas || 0), 0);
+const progresso = calcularProgresso(colecao);
+
+const progressoPorSelecao = calcularProgressoPorSelecao();
+const selecoesCompletas = progressoPorSelecao.filter(
+  item => item.completa
+);
+
+const termoBusca = busca.trim().toLowerCase();
+
+let listaFiltrada = colecao;
 
   if (termoBusca !== '') {
     const ehSiglaExata = colecao.some(item => item.codigoBusca.split(' ')[0].toLowerCase() === termoBusca);
@@ -464,6 +502,48 @@ setResultadoComparacao({
             </div>
           </div>
         </div>
+        <div className="bg-yellow-100 border-4 border-red-500 p-4 mb-6 rounded-xl">
+  <h2 className="text-2xl font-black">
+    <div className="bg-white rounded-3xl shadow-xl p-6 mb-6 border-t-8 border-yellow-400">
+  <div className="flex justify-between items-center mb-4">
+    <h2 className="text-2xl font-black text-gray-800">
+      🏆 Seleções Completas
+    </h2>
+
+    <span className="bg-green-100 text-green-700 px-4 py-2 rounded-xl font-bold">
+      {selecoesCompletas.length} completas
+    </span>
+  </div>
+
+  <div className="flex flex-wrap gap-2">
+    {selecoesCompletas.length === 0 ? (
+      <p className="text-gray-500">
+        Nenhuma seleção completa ainda.
+      </p>
+    ) : (
+      selecoesCompletas.map((item) => (
+        <div
+          key={item.prefixo}
+          className="flex items-center gap-2 bg-green-50 border border-green-300 rounded-xl px-3 py-2"
+        >
+          <img
+            src={`/escudos/${item.prefixo}.png`}
+            alt={item.selecao}
+            className="w-8 h-8 object-contain bg-white rounded-full p-1"
+            onError={(e) => {
+              e.currentTarget.style.display = "none";
+            }}
+          />
+          <span className="font-bold text-green-700">
+            {item.selecao}
+          </span>
+        </div>
+      ))
+    )}
+  </div>
+</div>
+  </h2>
+</div>
 
         <div className="bg-white rounded-3xl shadow-xl p-4 mb-6">
           <input

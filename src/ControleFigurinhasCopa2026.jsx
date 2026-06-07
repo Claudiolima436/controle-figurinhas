@@ -502,47 +502,114 @@ let listaFiltrada = colecao;
             </div>
           </div>
         </div>
-        <div className="bg-yellow-100 border-4 border-red-500 p-4 mb-6 rounded-xl">
-  <h2 className="text-2xl font-black">
-    <div className="bg-white rounded-3xl shadow-xl p-6 mb-6 border-t-8 border-yellow-400">
-  <div className="flex justify-between items-center mb-4">
-    <h2 className="text-2xl font-black text-gray-800">
-      🏆 Seleções Completas
-    </h2>
-
-    <span className="bg-green-100 text-green-700 px-4 py-2 rounded-xl font-bold">
-      {selecoesCompletas.length} completas
-    </span>
-  </div>
-
-  <div className="flex flex-wrap gap-2">
-    {selecoesCompletas.length === 0 ? (
-      <p className="text-gray-500">
-        Nenhuma seleção completa ainda.
+        <div className="bg-white rounded-3xl shadow-xl p-6 mb-6 border-t-8 border-yellow-400">
+  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+    <div>
+      <h2 className="text-2xl font-black text-gray-800">
+        🏆 Progresso das Seleções
+      </h2>
+      <p className="text-sm text-gray-500 font-medium">
+        Acompanhe seleções completas e quase completas
       </p>
-    ) : (
-      selecoesCompletas.map((item) => (
-        <div
-          key={item.prefixo}
-          className="flex items-center gap-2 bg-green-50 border border-green-300 rounded-xl px-3 py-2"
-        >
-          <img
-            src={`/escudos/${item.prefixo}.png`}
-            alt={item.selecao}
-            className="w-8 h-8 object-contain bg-white rounded-full p-1"
-            onError={(e) => {
-              e.currentTarget.style.display = "none";
-            }}
-          />
-          <span className="font-bold text-green-700">
-            {item.selecao}
-          </span>
-        </div>
-      ))
-    )}
+    </div>
+
+    <div className="flex gap-2">
+      <span className="bg-green-100 text-green-700 px-4 py-2 rounded-xl font-bold">
+        {selecoesCompletas.length} completas
+      </span>
+
+      <span className="bg-yellow-100 text-yellow-700 px-4 py-2 rounded-xl font-bold">
+        {progressoPorSelecao.filter(item => !item.completa && item.percentual >= 80).length} quase
+      </span>
+    </div>
   </div>
-</div>
-  </h2>
+
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
+      <h3 className="font-black text-green-700 mb-3">
+        ✅ Completas
+      </h3>
+
+      {selecoesCompletas.length === 0 ? (
+        <p className="text-sm text-gray-500">
+          Nenhuma seleção completa ainda.
+        </p>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          {selecoesCompletas.map((item) => (
+            <div
+              key={item.prefixo}
+              className="flex items-center gap-2 bg-white border border-green-300 rounded-xl px-3 py-2"
+            >
+              <img
+                src={`/escudos/${item.prefixo}.png`}
+                alt={item.selecao}
+                className="w-7 h-7 object-contain bg-white rounded-full p-1"
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
+                }}
+              />
+
+              <span className="font-bold text-green-700">
+                {item.selecao}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+
+    <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-4">
+      <h3 className="font-black text-yellow-700 mb-3">
+        🔥 Quase completas
+      </h3>
+
+      {progressoPorSelecao.filter(item => !item.completa && item.percentual >= 80).length === 0 ? (
+        <p className="text-sm text-gray-500">
+          Nenhuma seleção acima de 80% ainda.
+        </p>
+      ) : (
+        <div className="flex flex-col gap-2">
+          {progressoPorSelecao
+            .filter(item => !item.completa && item.percentual >= 80)
+            .map((item) => (
+              <div
+                key={item.prefixo}
+                className="bg-white border border-yellow-300 rounded-xl p-3"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <img
+                      src={`/escudos/${item.prefixo}.png`}
+                      alt={item.selecao}
+                      className="w-7 h-7 object-contain bg-white rounded-full p-1"
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                      }}
+                    />
+
+                    <span className="font-bold text-gray-800">
+                      {item.selecao}
+                    </span>
+                  </div>
+
+                  <span className="text-sm font-black text-yellow-700">
+                    {item.possui}/{item.total}
+                  </span>
+                </div>
+
+                <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                  <div
+                    className="h-2 rounded-full bg-yellow-500"
+                    style={{ width: `${item.percentual}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+        </div>
+      )}
+    </div>
+  </div>
 </div>
 
         <div className="bg-white rounded-3xl shadow-xl p-4 mb-6">

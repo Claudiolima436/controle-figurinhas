@@ -573,10 +573,19 @@ let listaFiltrada = colecao;
           {progressoPorSelecao
             .filter(item => !item.completa && item.percentual >= 80)
             .map((item) => (
-              <div
-                key={item.prefixo}
-                className="bg-white border border-yellow-300 rounded-xl p-3"
-              >
+              <button
+  key={item.prefixo}
+  type="button"
+  onClick={() => {
+    setBusca(item.prefixo);
+    setFiltroAtivo('faltantes');
+
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 100);
+  }}
+  className="w-full bg-white border border-yellow-300 rounded-xl p-3 text-left hover:bg-yellow-100 transition-colors"
+>
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <img
@@ -604,7 +613,7 @@ let listaFiltrada = colecao;
                     style={{ width: `${item.percentual}%` }}
                   />
                 </div>
-              </div>
+              </button>
             ))}
         </div>
       )}

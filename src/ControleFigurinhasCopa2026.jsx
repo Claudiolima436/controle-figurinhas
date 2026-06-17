@@ -371,6 +371,29 @@ setResultadoComparacao({
       .catch(() => alert("Erro ao copiar a lista. Tente novamente."));
   };
 
+  const copiarFaltantesParaWhatsApp = () => {
+  const faltantesFiltradas = colecao.filter(item => !item.possui);
+
+  if (faltantesFiltradas.length === 0) {
+    alert("Parabéns! Você não tem figurinhas faltantes.");
+    return;
+  }
+
+  let texto = "📋 *Minhas Figurinhas Faltantes - Copa 2026* 📋\n\n";
+
+  faltantesFiltradas.forEach(item => {
+    texto += `⚽ ${item.codigoBusca}`;
+    if (item.nomeJogador) texto += ` (${item.nomeJogador})`;
+    texto += "\n";
+  });
+
+  texto += "\nSe alguém tiver alguma dessas, me chama!";
+
+  navigator.clipboard.writeText(texto)
+    .then(() => alert("Lista de faltantes copiada com sucesso! Agora é só colar no WhatsApp."))
+    .catch(() => alert("Erro ao copiar a lista. Tente novamente."));
+};
+
   if (verificandoLogin) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-100 to-green-100 flex items-center justify-center">
@@ -664,6 +687,13 @@ let listaFiltrada = colecao;
             </svg>
             Copiar Lista de Repetidas para WhatsApp
           </button>
+
+          <button
+  onClick={copiarFaltantesParaWhatsApp}
+  className="w-full mt-2 py-3 px-4 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-bold shadow-md transition-colors flex items-center justify-center gap-2"
+>
+  📋 Copiar Lista de Faltantes para WhatsApp
+</button>
       
 
 <div className="mt-4 bg-blue-50 rounded-2xl p-4 border border-blue-100">
